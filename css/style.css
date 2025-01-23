@@ -1,0 +1,202 @@
+* {
+    margin: 0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+h1 {
+    text-align: center;
+    font-size: 200%;
+    background-color: #73463C;
+    border-radius: 5px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    color: #F2D0C4;
+    margin-bottom: 35px;
+}
+
+h2 {
+    font-family: cursive;
+    font-size: 200%;
+    text-align: center;
+    color: #73463C;
+    width: auto;
+    border-radius: 5px;
+    padding: 25px;
+}
+
+h3 {
+    text-align: center;
+    text-decoration: underline;
+    margin-bottom: 5px;
+}
+
+ul {
+    list-style-type: circle;
+    margin-top: 25px;
+}
+
+
+/* TUTORIEL */
+
+#tutorialContainer h2 {
+    text-align: center;
+    font-size: 150%;
+    background-color: #73463C;
+    color: #F2D0C4;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+#tutorialContainer p {
+    font-size: 100%;
+    text-align: left;
+    color: #73463C;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998; /* behind the close_x button and tutorial */
+}
+
+
+/* HEADER */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+    min-height: 110px;
+    max-height: 130px;
+    background-color: #65AFBF;
+    color: #A2EAF2;
+    padding-left: 5vw;
+    padding-right: 5vw;
+}
+
+.header_bouton {
+    border-radius: 30%;
+    z-index: 1000;
+    position: relative;  /* Ensure z-index works */
+}
+
+.header_bouton img#accueil {
+    z-index: 1; /* Reset the z-index for the home button to keep it behind the overlay */
+}
+
+.header_bouton[href="index.html"] { 
+    z-index: 1; /* Reset the z-index for the home button to keep it behind the overlay */
+}
+
+#header_titre {
+    font-size: 300%;
+    text-align: center;
+}
+
+#accueil, #question {
+    max-width: 65px;
+    height: auto;
+}
+
+main {
+    background-color: #D98E73;
+}
+
+
+/* BODY */
+
+section {
+    padding-left: 5vw;
+    padding-right: 5vw;
+    height: 100%;
+    min-height: 100vh;
+}
+
+.ligne_haute {      /* Contains revenir_bouton and prompt in grid display */
+    display: grid;
+    grid-template-columns:12% 76% 12%;
+    align-items: center;
+}
+
+.revenir_bouton {
+    grid-column: 1;
+}
+
+.prompt {
+    grid-column: 2;
+    align-self: center;
+}
+
+#revenir_img {
+    width: 60px;
+}
+
+#revenir_img:hover {
+    cursor: pointer;
+}
+
+
+/* Pages des DOSSIERS */
+
+.tuile_section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    font-size: 125%;
+}
+
+.tuile {
+    display: block;
+    text-align: left;
+    text-decoration: none;
+    margin-bottom: 50px;
+    width: calc(50% - 25px); /* Adjust based on container width and desired gap */
+    box-sizing: border-box; /* Ensures padding is included in the width calculation */
+    padding: 40px;
+    border-radius: 5px;
+    background-color: #F2D0C4;
+    color: #73463C;
+    box-shadow: 1px 1px 2px 1px #73463C;
+    transition: box-shadow .25s;
+}
+
+.tuile:hover {
+    box-shadow: 2px 2px 3px 2px #73463C;
+}
+
+.tuile > a {
+    text-decoration: none;
+    background-color: #F2D0C4;
+    color: #73463C;
+}
+
+
+/* Pages des DOCUMENTS */
+
+.dossier_section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    font-size: 150%;
+    text-transform: uppercase;
+    background-color: #F2D0C4;
+}
+
+.document {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    margin-bottom: 20px;
+    width: calc(50% - 10px); /* Adjust based on container width and desired gap */
+    box-sizing: border-box; /* Ensures padding is included in the width calculation */
+    padding: 40px;
+    border-radius: 5px;
+    background-color: #d4ecef;
+    color: #65AFBF;
+}

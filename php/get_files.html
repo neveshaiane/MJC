@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des fichiers</title>
+    <style>
+        /* Conteneur principal pour centrer la barre de recherche et la liste de fichiers */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Styles pour la barre de recherche */
+        .search-bar {
+            width: 80%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 3px solid #A2EAF2;
+            border-radius: 12px;
+            font-size: 1.2em;
+        }
+
+        /* Styles pour les tuiles de fichier */
+        .file-tile {
+            font-size: 1em;
+            width: 28%;
+            max-width: 300px;
+            min-width: none;
+            height: 200px;
+            border: 3px solid #A2EAF2;
+            border-radius: 12px;
+            background-color: #F2D0C4;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+            overflow: hidden; /* pour s'assurer que le contenu ne dépasse pas */
+            display: flex;
+            flex-direction: column;
+            position: relative; /* Pour positionner le symbole de téléchargement */
+        }
+
+        /* Styles pour les images et PDF dans les tuiles de fichier */
+        .file-tile img, .file-tile canvas {
+            max-width: 80%;
+            max-height: 80%;
+            align-self: center;
+            justify-content: center;
+        }
+
+        /* Styles pour la liste des fichiers */
+        #file-list {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* Styles pour le symbole de téléchargement */
+        .download-icon {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 45px;
+            height: 45px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2; /* Assurez-vous que le symbole est au-dessus du contenu */
+        }
+
+        .file-tile:hover .download-icon {
+            opacity: 1;
+        }
+
+        .download-icon img {
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Conteneur principal -->
+    <div class="container">
+        <!-- Barre de recherche -->
+        <input type="text" id="search-bar" class="search-bar" placeholder="Rechercher des fichiers...">
+
+        <!-- Element HTML où nous allons afficher les tuiles de fichier -->
+        <div id="file-list"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>
+        var files = []; // Stocker les fichiers pour pouvoir les filtrer
+
+        // Fonction pour récupérer la liste des fichiers via AJAX
+        function fetchFiles() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '../../../php/get_files.php', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        files = JSON.parse(xhr.responseText);
+                        displayFiles(files);
+                    } else {
+                        console.error('Erreur lors de la récupération des fichiers:', xhr.status);
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        // Fonction pour afficher les fichiers
+        function displayFiles(filesToDisplay) {
+            var fileListElement = document.getElementById('file-list');
+            fileListElement.innerHTML = ''; // Vider la liste avant d'ajouter les fichiers
+
+            filesToDisplay.forEach(function(fileObj) {
+                var fileTile = document.createElement('div');
+                fileTile.className = 'file-tile';
+
+                // Crée un lien qui ouvrira le fichier dans un nouvel onglet
+                var fileLink = document.createElement('a');
+                fileLink.href = fileObj.path;
+                fileLink.target = '_blank';
+                fileLink.style.textDecoration = 'none';
+                fileLink.style.color = 'inherit'; // Pour que le lien hérite de la couleur parente
+
+                var fileExtension = fileObj.name.split('.').pop();
+                if (['jpg', 'png', 'jpeg', 'gif'].indexOf(fileExtension) !== -1) {
+                    var img = document.createElement('img');
+                    img.src = fileObj.path;
+                    fileLink.appendChild(img);
+                    addTitle(fileObj, fileLink); // Ajout du titre pour les images
+                } else if (fileExtension === 'pdf') {
+                    var pdfContainer = document.createElement('div');
+                    pdfContainer.style.width = '100%';
+                    pdfContainer.style.height = '100%';
+                    showFilePreview(fileObj.path, pdfContainer, fileObj.name, 1.0, fileObj); // Utilisation d'un facteur de zoom de 1.0 pour les PDF
+                    fileLink.appendChild(pdfContainer);
+                } else {
+                    var fileName = document.createElement('p');
+                    fileName.textContent = fileObj.name;
+                    fileLink.appendChild(fileName);
+                    addTitle(fileObj, fileLink); // Ajout du titre pour les autres types de fichiers
+                }
+
+                fileTile.appendChild(fileLink);
+
+                // Ajout du symbole de téléchargement
+                var downloadLink = document.createElement('a');
+                downloadLink.href = fileObj.path;
+                downloadLink.download = fileObj.name;
+                downloadLink.className = 'download-icon';
+                var downloadImg = document.createElement('img');
+                downloadImg.src = '../../../media/telechargement.png'; // Lien vers une icône de téléchargement
+                downloadImg.alt = 'Download';
+                downloadLink.appendChild(downloadImg);
+                fileTile.appendChild(downloadLink);
+
+                fileListElement.appendChild(fileTile);
+            });
+        }
+
+        // Fonction pour afficher un aperçu d'un fichier avec un titre et un facteur de zoom
+        function showFilePreview(filePath, containerElement, title, zoomFactor, fileObj) {
+            var extension = filePath.split('.').pop().toUpperCase();
+            var titleElement = document.createElement('p');
+            titleElement.textContent = title + ' (' + extension + ')';
+
+            // Stylisation du titre
+            titleElement.style.textAlign = 'center';
+            titleElement.style.overflow = 'hidden';
+            titleElement.style.textOverflow = 'ellipsis';
+            titleElement.style.whiteSpace = 'nowrap';
+            titleElement.style.marginBottom = '12px';
+
+            containerElement.appendChild(titleElement);
+
+            if (extension === 'PDF') {
+                showPDFPreview(filePath, containerElement, zoomFactor, fileObj);
+            } else {
+                // Code pour afficher l'aperçu pour d'autres types de fichiers
+                // Par exemple, vous pouvez ajouter un canvas pour les images, etc.
+            }
+        }
+
+        // Fonction pour afficher un aperçu d'un fichier PDF avec un zoom
+        function showPDFPreview(pdfPath, containerElement, zoomFactor, fileObj) {
+            pdfjsLib.getDocument(pdfPath).promise.then(function(pdf) {
+                pdf.getPage(1).then(function(page) {
+                    var viewport = page.getViewport({ scale: zoomFactor });
+
+                    var canvas = document.createElement('canvas');
+                    var context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    var renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+
+                    page.render(renderContext).promise.then(function() {
+                        containerElement.appendChild(canvas);
+                    });
+                });
+            });
+        }
+
+        // Fonction pour ajouter un titre au-dessus de l'élément
+        function addTitle(fileObj, containerElement) {
+            var titleElement = document.createElement('p');
+            titleElement.textContent = fileObj.name;
+
+            // Stylisation du titre
+            titleElement.style.textAlign = 'center';
+            titleElement.style.overflow = 'hidden';
+            titleElement.style.textOverflow = 'ellipsis';
+            titleElement.style.whiteSpace = 'nowrap';
+            titleElement.style.marginBottom = '12px';
+
+            containerElement.insertBefore(titleElement, containerElement.firstChild);
+        }
+
+        // Fonction pour filtrer les fichiers en fonction de la recherche
+        function filterFiles() {
+            var query = document.getElementById('search-bar').value.toLowerCase();
+            var filteredFiles = files.filter(function(file) {
+                return file.name.toLowerCase().includes(query);
+            });
+            displayFiles(filteredFiles);
+        }
+
+        // Appel de la fonction pour récupérer les fichiers au chargement de la page
+        fetchFiles();
+
+        // Ajout d'un écouteur d'événement pour la barre de recherche
+        document.getElementById('search-bar').addEventListener('input', filterFiles);
+    </script>
+</body>
+</html>
