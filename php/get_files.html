@@ -101,7 +101,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
         var files = []; // Stocker les fichiers pour pouvoir les filtrer
-
+    
         // Fonction pour récupérer la liste des fichiers via AJAX
         function fetchFiles() {
             var xhr = new XMLHttpRequest();
@@ -118,132 +118,46 @@
             };
             xhr.send();
         }
-
+    
+        // Fonction pour supprimer les accents d'une chaîne de caractères
+        function removeAccents(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+    
+        // Fonction pour filtrer les fichiers en fonction de la recherche
+        function filterFiles() {
+            var query = removeAccents(document.getElementById('search-bar').value.toLowerCase());
+            var filteredFiles = files.filter(function(file) {
+                return removeAccents(file.name.toLowerCase()).includes(query);
+            });
+            displayFiles(filteredFiles);
+        }
+    
         // Fonction pour afficher les fichiers
         function displayFiles(filesToDisplay) {
             var fileListElement = document.getElementById('file-list');
             fileListElement.innerHTML = ''; // Vider la liste avant d'ajouter les fichiers
-
+    
             filesToDisplay.forEach(function(fileObj) {
                 var fileTile = document.createElement('div');
                 fileTile.className = 'file-tile';
-
+    
                 // Crée un lien qui ouvrira le fichier dans un nouvel onglet
                 var fileLink = document.createElement('a');
                 fileLink.href = fileObj.path;
                 fileLink.target = '_blank';
                 fileLink.style.textDecoration = 'none';
                 fileLink.style.color = 'inherit'; // Pour que le lien hérite de la couleur parente
-
-                var fileExtension = fileObj.name.split('.').pop();
-                if (['jpg', 'png', 'jpeg', 'gif'].indexOf(fileExtension) !== -1) {
-                    var img = document.createElement('img');
-                    img.src = fileObj.path;
-                    fileLink.appendChild(img);
-                    addTitle(fileObj, fileLink); // Ajout du titre pour les images
-                } else if (fileExtension === 'pdf') {
-                    var pdfContainer = document.createElement('div');
-                    pdfContainer.style.width = '100%';
-                    pdfContainer.style.height = '100%';
-                    showFilePreview(fileObj.path, pdfContainer, fileObj.name, 1.0, fileObj); // Utilisation d'un facteur de zoom de 1.0 pour les PDF
-                    fileLink.appendChild(pdfContainer);
-                } else {
-                    var fileName = document.createElement('p');
-                    fileName.textContent = fileObj.name;
-                    fileLink.appendChild(fileName);
-                    addTitle(fileObj, fileLink); // Ajout du titre pour les autres types de fichiers
-                }
-
+    
+                fileLink.textContent = fileObj.name;
                 fileTile.appendChild(fileLink);
-
-                // Ajout du symbole de téléchargement
-                var downloadLink = document.createElement('a');
-                downloadLink.href = fileObj.path;
-                downloadLink.download = fileObj.name;
-                downloadLink.className = 'download-icon';
-                var downloadImg = document.createElement('img');
-                downloadImg.src = '../../../media/telechargement.png'; // Lien vers une icône de téléchargement
-                downloadImg.alt = 'Download';
-                downloadLink.appendChild(downloadImg);
-                fileTile.appendChild(downloadLink);
-
                 fileListElement.appendChild(fileTile);
             });
         }
-
-        // Fonction pour afficher un aperçu d'un fichier avec un titre et un facteur de zoom
-        function showFilePreview(filePath, containerElement, title, zoomFactor, fileObj) {
-            var extension = filePath.split('.').pop().toUpperCase();
-            var titleElement = document.createElement('p');
-            titleElement.textContent = title + ' (' + extension + ')';
-
-            // Stylisation du titre
-            titleElement.style.textAlign = 'center';
-            titleElement.style.overflow = 'hidden';
-            titleElement.style.textOverflow = 'ellipsis';
-            titleElement.style.whiteSpace = 'nowrap';
-            titleElement.style.marginBottom = '12px';
-
-            containerElement.appendChild(titleElement);
-
-            if (extension === 'PDF') {
-                showPDFPreview(filePath, containerElement, zoomFactor, fileObj);
-            } else {
-                // Code pour afficher l'aperçu pour d'autres types de fichiers
-                // Par exemple, vous pouvez ajouter un canvas pour les images, etc.
-            }
-        }
-
-        // Fonction pour afficher un aperçu d'un fichier PDF avec un zoom
-        function showPDFPreview(pdfPath, containerElement, zoomFactor, fileObj) {
-            pdfjsLib.getDocument(pdfPath).promise.then(function(pdf) {
-                pdf.getPage(1).then(function(page) {
-                    var viewport = page.getViewport({ scale: zoomFactor });
-
-                    var canvas = document.createElement('canvas');
-                    var context = canvas.getContext('2d');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-
-                    var renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-
-                    page.render(renderContext).promise.then(function() {
-                        containerElement.appendChild(canvas);
-                    });
-                });
-            });
-        }
-
-        // Fonction pour ajouter un titre au-dessus de l'élément
-        function addTitle(fileObj, containerElement) {
-            var titleElement = document.createElement('p');
-            titleElement.textContent = fileObj.name;
-
-            // Stylisation du titre
-            titleElement.style.textAlign = 'center';
-            titleElement.style.overflow = 'hidden';
-            titleElement.style.textOverflow = 'ellipsis';
-            titleElement.style.whiteSpace = 'nowrap';
-            titleElement.style.marginBottom = '12px';
-
-            containerElement.insertBefore(titleElement, containerElement.firstChild);
-        }
-
-        // Fonction pour filtrer les fichiers en fonction de la recherche
-        function filterFiles() {
-            var query = document.getElementById('search-bar').value.toLowerCase();
-            var filteredFiles = files.filter(function(file) {
-                return file.name.toLowerCase().includes(query);
-            });
-            displayFiles(filteredFiles);
-        }
-
+    
         // Appel de la fonction pour récupérer les fichiers au chargement de la page
         fetchFiles();
-
+    
         // Ajout d'un écouteur d'événement pour la barre de recherche
         document.getElementById('search-bar').addEventListener('input', filterFiles);
     </script>
